@@ -1,0 +1,8 @@
+# Local browser profiles and generated review captures.
+.impeccable/browser-check/
+.impeccable/browser-portal/
+.impeccable/review/
+.env
+.env.*
+!.env.example
+*.log

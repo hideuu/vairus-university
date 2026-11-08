@@ -1,0 +1,13 @@
+.admin-header { display:flex; align-items:center; justify-content:space-between; gap:20px; padding:24px clamp(24px,6vw,90px); background:var(--navy); color:var(--off-white); }
+.admin-header a { color:inherit; text-decoration:none; font-family:'Plus Jakarta Sans',sans-serif; font-weight:700; }
+.admin-header form { margin:0; }
+.admin-header button { min-height:44px; padding:8px 20px; border:1px solid var(--pale-blue); border-radius:7px; background:transparent; color:inherit; }
+.admin-header button:hover { background:var(--blue); }
+.admin-main { max-width:1000px; padding:clamp(32px,6vw,80px) 24px; margin:auto; }
+.admin-main h1 { font-size:clamp(28px,4vw,44px); overflow-wrap:anywhere; margin-bottom:16px; }
+.admin-details { margin-top:40px; padding:28px; background:var(--pale-blue); border-radius:10px; }
+.admin-details h2 { font-size:22px; }
+.admin-details dl { display:grid; grid-template-columns:100px 1fr; gap:12px; font-size:14px; }
+.admin-details dd { margin:0; overflow-wrap:anywhere; }
+.admin-note { margin-top:28px; color:var(--secondary); }
+.admin-header :focus-visible { outline-color:var(--gold); }
