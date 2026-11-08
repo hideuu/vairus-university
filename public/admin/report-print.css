@@ -1,0 +1,19 @@
+.report-print-body { background: white; }
+.report-print-main { max-width: 1600px; margin: auto; padding: 32px; }
+.report-print-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 28px; }
+.report-university { margin-bottom: 8px; font-weight: 650; }
+.report-print-main .table-scroll { margin-top: 24px; }
+@media print {
+    @page { size: landscape; margin: 12mm; }
+    .report-print-actions { display: none; }
+    .report-print-main { padding: 0; max-width: none; }
+    .report-print-main .table-scroll { overflow: visible; }
+    .report-print-main table { table-layout: fixed; }
+    .report-print-main th, .report-print-main td { padding: 6px; font-size: 9pt; white-space: normal; overflow-wrap: anywhere; }
+    .report-print-main .cell-text { min-width: 0; max-width: none; }
+    .report-print-main thead { display: table-header-group; }
+    .report-print-main tr { break-inside: avoid; }
+    .report-print-main details > summary { display: none; }
+    .report-print-main details > p { display: block; margin: 0; }
+    .report-print-main .cell-details { min-width: 0; max-width: none; }
+}

@@ -23,6 +23,12 @@ The login uses `auth_users`; plaintext accounts in the old SQL dump are not enab
 
 Start with **Courses**, then **Subjects**, **Sections**, and **Schedules**. Add a student under **Students**, then create an account under **Accounts**, choose the Student role, and select that student record. Sign out and use the new account to test student enrollment. The database starts empty apart from existing accounts; test records are not left in it.
 
+## Reports
+
+Open **Reports** in the administrator navigation. Choose enrollment, student, course, subject, section, or schedule reports, apply filters, and review the paginated preview. **Download CSV** exports every matching row, including records beyond the preview page. Files use UTF-8 with a BOM for Excel compatibility and escape formula-like cell values. No password hashes or family details are exported.
+
+**Print / Save as PDF** opens a complete filtered report in a new tab. Use its print button and choose the browser’s Save as PDF destination. The print view uses landscape layout and repeats column headings; it does not print only the preview page. Enrollment filters support course, year level, academic year, semester, status, and inclusive submission dates. Other report types show only applicable filters. Generated timestamps follow the database clock. CSV and print endpoints independently enforce administrator access. Reports require no schema changes or additional libraries.
+
 ## Data compatibility
 
 Academic screens use the supplied `courses_tbl`, `subjecttbl`, `sections_tbl`, `sched_tbl`, and `studenttbl` structures. Explicit `auth_users.student_id` links replace ambiguous legacy account IDs. New requests use `enrollment_requests`/`enrollment_items`; old `student_subject` and `usertbl` records remain untouched and are not automatically migrated. Full email addresses, contact numbers, and student numbers are supported by widening legacy columns. Missing tables are created with InnoDB; existing table engines are preserved. Section-capacity transaction locking assumes InnoDB sections, as created by setup on this installation. Each subject has one class day, and schedule room identifiers are numeric because those are the existing schema constraints. No invented payment, grading, room-catalog, or instructor-account modules are included.
@@ -44,3 +50,4 @@ node --check public/portal.js
 The tests exercise login, CSRF, SQL injection rejection, role isolation, CRUD round trips, profile privacy, enrollment submission/decisions/capacity/withdrawal, password changes, and logout. Portal tests create uniquely named temporary records and remove them in a finally block. Run against a local development instance without concurrent login traffic; the tests temporarily reset and then restore the loopback IP’s throttle row. Tests never contain the administrator password.
 
 Optional screenshots: launch an isolated headless Chrome with DevTools on port 9333, set `CAPTURE_PORTAL=1`, and run `tests/portal.php`. Its Node CDP helper captures desktop/mobile pages into `.impeccable/review/` and checks assets, navigation, subject-selection totals, overflow, and runtime errors. Screenshot records are temporary integration fixtures, not production data.
+

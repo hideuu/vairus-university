@@ -17,11 +17,16 @@ function icon($name)
         'arrow'=>'M5 12h14 M13 6l6 6-6 6', 'check'=>'M5 12l4 4L19 6',
         'info'=>'M12 8v.01 M12 11v6 M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20',
         'print'=>'M6 8V3h12v5 M6 17H3V8h18v9h-3 M6 14h12v7H6z',
+        'reports'=>'M5 3h14v18H5z M8 16v-3 M12 16V8 M16 16v-5',
     ];
     $key = ['enroll'=>'plus','profile'=>'users'][$name] ?? $name;
     return '<svg class="icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="'.($paths[$key] ?? $paths['subjects']).'"/></svg>';
 }
 function csrf_input() { return '<input type="hidden" name="csrf_token" value="'.escape_html($_SESSION['csrf_token']).'">'; }
+function portal_nav_link($key,$label,$current)
+{
+    return '<a href="?page='.escape_html($key).'"'.($key===$current?' aria-current="page"':'').'>'.icon($key).'<span>'.escape_html($label).'</span></a>';
+}
 function badge($value)
 {
     $allowed = ['pending','approved','rejected','withdrawn','active','disabled'];
@@ -123,19 +128,29 @@ function render_records($module)
     $records=rows('SELECT * FROM `'.$spec['table'].'`'.$where.' ORDER BY `'.$spec['pk'].'` DESC LIMIT 15 OFFSET '.$offset,$params);
     echo '<section class="surface"><div class="table-toolbar"><h2>All '.escape_html(strtolower($spec['title'])).' <span class="count-tag">'.$count.'</span></h2><form class="search-form" method="GET"><input type="hidden" name="page" value="'.escape_html($module).'"><label class="visually-hidden" for="record-search">Search '.escape_html(strtolower($spec['title'])).'</label><div class="search-input">'.icon('search').'<input id="record-search" type="search" name="q" value="'.escape_html($search).'" placeholder="Search '.escape_html(strtolower($spec['title'])).'"></div><button class="button button-secondary" type="submit">Search</button></form></div>';
     if (!$records) { empty_state($search!=='' ? 'No matching records' : 'No '.strtolower($spec['title']).' yet',$search!=='' ? 'Try a different search or clear the search field.' : 'Add your first '.$spec['singular'].' to start building your university records.',link_button('?page='.$module.($search!==''?'':'&new=1'),$search!==''?'Clear search':'Add '.$spec['singular'],false)); }
+    elseif ($module === 'subjects') { render_subject_catalog($records); }
     else {
         $section_names=$module==='schedules' ? choices('section') : [];
         $subject_names=$module==='schedules' ? choices('subject') : [];
+        $columns=$module==='students' ? ['student_name'=>'Student','studnum'=>'Student number','course'=>'Course','yearlvl'=>'Year level'] : $spec['columns'];
         echo '<div class="table-scroll" tabindex="0" role="region" aria-label="'.escape_html($spec['title']).' table"><table><thead><tr>';
-        foreach ($spec['columns'] as $label) { echo '<th scope="col">'.escape_html($label).'</th>'; }
+        foreach ($columns as $label) { echo '<th scope="col">'.escape_html($label).'</th>'; }
         echo '<th scope="col" class="table-actions">Actions</th></tr></thead><tbody>';
         foreach ($records as $record) {
             echo '<tr>';
-            foreach ($spec['columns'] as $column=>$label) {
+            foreach ($columns as $column=>$label) {
+                if ($column==='student_name') {
+                    $name=trim($record['fname'].' '.$record['minitial'].' '.$record['lname']);
+                    $initials=mb_strtoupper(mb_substr($record['fname'],0,1).mb_substr($record['lname'],0,1));
+                    echo '<td><a class="student-identity" href="?page=students&edit='.(int)$record['ID'].'"><span class="row-avatar" aria-hidden="true">'.escape_html($initials).'</span><span><strong>'.escape_html($name).'</strong><small>'.escape_html($record['emailaddress']).'</small></span></a></td>';
+                    continue;
+                }
                 $value=$record[$column] ?? '';
                 if ($module==='schedules' && $column==='section_ID') { $value=$section_names[$value] ?? 'Section #'.$value; }
                 if ($module==='schedules' && $column==='subject_ID') { $value=$subject_names[$value] ?? 'Subject #'.$value; }
-                echo '<td>'.($column==='active' ? badge($value?'active':'disabled') : record_cell($value)).'</td>';
+                $cell=$column==='active' ? badge($value?'active':'disabled') : record_cell($value);
+                if ($module==='students' && in_array($column,['studnum','course'],true)) { $cell='<span class="'.($column==='course'?'course-label':'record-code').'">'.escape_html($value).'</span>'; }
+                echo '<td>'.$cell.'</td>';
             }
             echo '<td class="table-actions"><a class="text-link" href="?page='.$module.'&edit='.(int)$record[$spec['pk']].'">Edit</a>';
             if ($module!=='users') { echo '<a class="delete-link" href="?page='.$module.'&delete='.(int)$record[$spec['pk']].'">Delete</a>'; }
@@ -147,6 +162,17 @@ function render_records($module)
     if ($number>1) { echo link_button('?'.http_build_query(['page'=>$module,'q'=>$search,'p'=>$number-1]),'Previous',false); }
     if ($offset+15<$count) { echo link_button('?'.http_build_query(['page'=>$module,'q'=>$search,'p'=>$number+1]),'Next',false); }
     echo '</div></div></section>';
+}
+function render_subject_catalog($subjects)
+{
+    echo '<div class="catalog-grid">';
+    foreach ($subjects as $subject) {
+        echo '<article class="catalog-card"><div class="catalog-card-top"><span class="record-code">'.escape_html($subject['subjectcode']).'</span><span class="units-tag">'.escape_html($subject['numofunits']).' units</span></div><h3>'.escape_html($subject['subjecttitle']).'</h3><p class="catalog-description">'.escape_html($subject['description']?:$subject['course_con']).'</p><div class="catalog-flags">';
+        if ($subject['islab']) { echo '<span class="badge badge-pending">Laboratory</span>'; }
+        if ($subject['istutorial']) { echo '<span class="badge">Tutorial</span>'; }
+        echo '</div><div class="catalog-meta">'.escape_html($subject['day']?:'Day not assigned').'<br>'.escape_html($subject['instructor']?:'Instructor not assigned').'<br>'.escape_html($subject['room']!==''?'Room '.$subject['room']:'Room not assigned').'</div><div class="catalog-actions"><a class="text-link" href="?page=subjects&edit='.(int)$subject['ID'].'">Edit subject</a><a class="delete-link" href="?page=subjects&delete='.(int)$subject['ID'].'">Delete</a></div></article>';
+    }
+    echo '</div>';
 }
 function enrollment_rows($where='', $params=[], $limit=15, $offset=0)
 {
@@ -169,8 +195,16 @@ function render_dashboard()
 {
     global $user, $portal_role, $student;
     $admin=$portal_role==='admin';
-    page_heading('Overview',$admin?'A clear view of your university’s enrollment activity.':'Your academic information, all in one place.');
-    echo '<section class="welcome-banner"><div><h2>Welcome back, '.escape_html(explode(' ',$user['full_name'])[0]).'.</h2><p>'.($admin?'Keep enrollment moving, one student at a time.':'Plan your subjects and take the next step in your studies.').'</p>'.link_button($admin?'?page=enrollments&status=pending':'?page=enroll',$admin?'Review enrollments':'Enroll in subjects',false).'</div><img src="../assets/img/university_bg1.jpg" alt="University campus" class="welcome-photo"></section>';
+    $greeting=$admin?'Welcome to administration.':'Hi '.explode(' ',$user['full_name'])[0].', ready to enroll?';
+    echo '<section class="welcome-banner"><div><h1>'.escape_html($greeting).'</h1><p>'.($admin?'Manage student records, organize subject offerings, and keep enrollment moving.':'Choose your subjects, track your enrollment, and keep your university profile up to date.').'</p>'.link_button($admin?'?page=enrollments&status=pending':'?page=enroll',$admin?'Review enrollments':'Enroll in subjects',false).'</div><img src="../assets/img/university_bg1.jpg" alt="University campus" class="welcome-photo"></section>';
+    $shortcuts = $admin ? [
+        ['students','Manage students','Student records and contact details'], ['subjects','Manage subjects','Your university subject catalog'], ['sections','Manage sections','Classes, year levels, and capacity'], ['reports','Generate reports','Download CSV or print your records'],
+    ] : [
+        ['enroll','Enroll in subjects','Build your subject selection'], ['profile','My profile','Keep your details up to date'], ['schedules','My schedule','View your approved classes'], ['settings','Change password','Manage your account access'],
+    ];
+    echo '<div class="shortcut-grid">';
+    foreach ($shortcuts as [$key,$label,$description]) { echo '<a class="shortcut'.($admin&&$key==='reports'?' shortcut-featured':'').'" href="?page='.$key.'"><span class="shortcut-icon">'.icon($key).'</span><strong>'.escape_html($label).'</strong><span>'.escape_html($description).'</span></a>'; }
+    echo '</div>';
     $stats=$admin ? [
         ['students','Students',total('SELECT COUNT(*) FROM studenttbl'),'Student records'],
         ['enrollments','Pending review',total("SELECT COUNT(*) FROM enrollment_requests WHERE status='pending'"),'Enrollment requests'],
@@ -256,12 +290,12 @@ function render_enroll()
     render_field('academic_year',field('Academic year','text',true,9),post_text('academic_year'));
     render_field('semester',field('Semester','select',true,20,['First semester'=>'First semester','Second semester'=>'Second semester','Summer'=>'Summer']),post_text('semester'));
     render_field('section_id',field('Section','select',true,100,array_column($sections,'section_name','section_ID')),post_text('section_id'));
-    echo '</div><p class="form-help">Enter the academic year as two consecutive years, for example 2026-2027.</p></fieldset></section><section class="surface"><div class="section-heading"><h2>Available subjects</h2><span class="selection-summary" aria-live="polite"><span id="selected-count">0</span> selected · <span id="selected-units">0</span> units</span></div><div class="table-scroll"><table><thead><tr><th scope="col">Select</th><th scope="col">Subject</th><th scope="col">Units</th><th scope="col">Class day</th><th scope="col">Instructor</th></tr></thead><tbody>';
+    echo '</div><p class="form-help">Enter the academic year as two consecutive years, for example 2026-2027.</p></fieldset></section><div class="enrollment-layout"><section aria-labelledby="available-subjects"><div class="section-heading"><h2 id="available-subjects">Available subjects</h2></div><div class="subject-selection-grid">';
     $selected=is_array($_POST['subjects']??null)?array_filter($_POST['subjects'],'is_string'):[];
     foreach ($subjects as $subject) {
-        echo '<tr><td><label class="subject-choice"><input type="checkbox" class="subject-checkbox" name="subjects[]" value="'.(int)$subject['ID'].'" data-units="'.escape_html($subject['numofunits']).'"'.(in_array((string)$subject['ID'],$selected,true)?' checked':'').'><span class="visually-hidden">Select '.escape_html($subject['subjectcode']).'</span></label></td><td><strong>'.escape_html($subject['subjectcode']).'</strong><small>'.escape_html($subject['subjecttitle']).'</small></td><td>'.escape_html($subject['numofunits']).'</td><td>'.escape_html($subject['day']?:'Not scheduled').'</td><td>'.escape_html($subject['instructor']?:'Not assigned').'</td></tr>';
+        echo '<label class="subject-card subject-choice"><span class="catalog-card-top"><span class="record-code">'.escape_html($subject['subjectcode']).'</span><input type="checkbox" class="subject-checkbox" name="subjects[]" value="'.(int)$subject['ID'].'" data-units="'.escape_html($subject['numofunits']).'" aria-label="Select '.escape_html($subject['subjectcode'].' '.$subject['subjecttitle']).'"'.(in_array((string)$subject['ID'],$selected,true)?' checked':'').'></span><strong>'.escape_html($subject['subjecttitle']).'</strong><small>'.escape_html($subject['day']?:'Day not assigned').'<br>'.escape_html($subject['instructor']?:'Instructor not assigned').'</small><span class="catalog-flags"><span class="badge">'.escape_html($subject['numofunits']).' units</span>'.($subject['islab']?'<span class="badge badge-pending">Laboratory</span>':'').($subject['istutorial']?'<span class="badge">Tutorial</span>':'').'</span></label>';
     }
-    echo '</tbody></table></div><div class="enrollment-submit"><p>You can withdraw a pending request to change your selection.</p><button class="button button-primary" type="submit">Submit enrollment request</button></div></section></form>';
+    echo '</div></section><aside class="selection-panel" aria-labelledby="selection-heading"><h2 id="selection-heading">Your selection</h2><div class="selection-totals" aria-live="polite"><div>Subjects<strong id="selected-count">0</strong></div><div>Units<strong id="selected-units">0</strong></div></div><button class="button" type="submit">Submit enrollment request</button><p>Your administrator will review your request. You can withdraw it while it is pending.</p></aside></div></form>';
 }
 function render_profile()
 {
@@ -269,12 +303,12 @@ function render_profile()
     page_heading('My profile','Keep your contact information current. Contact your administrator for academic record changes.');
     if (!$student) { empty_state('Student record not linked','Contact your university administrator to link your account.'); return; }
     echo '<section class="surface profile-summary"><span class="profile-avatar">'.escape_html(mb_strtoupper(mb_substr($student['fname'],0,1))).'</span><div><h2>'.escape_html($student['fname'].' '.$student['lname']).'</h2><p>'.escape_html($student['studnum']).' · '.escape_html($student['course']).' · Year '.escape_html($student['yearlvl']).'</p></div></section>';
-    echo '<form method="POST" class="surface record-form">'.csrf_input().'<input type="hidden" name="action" value="profile"><fieldset><legend>Contact and family information</legend><div class="form-grid">';
+    echo '<div class="profile-layout"><nav class="profile-sections" aria-label="Profile sections"><a href="#profile-contact">Contact and family</a><a href="#profile-personal">Personal record</a><a href="?page=settings">Change password</a><a href="?page=enroll">Enroll in subjects</a></nav><div><form id="profile-contact" method="POST" class="surface record-form">'.csrf_input().'<input type="hidden" name="action" value="profile"><fieldset><legend>Contact and family information</legend><div class="form-grid">';
     foreach (['emailaddress','contact','address','guardianname','fathername','mothername'] as $key) { render_field($key,$modules['students']['fields'][$key],$_SERVER['REQUEST_METHOD']==='POST'?post_text($key):$student[$key]); }
     echo '</div></fieldset><div class="form-actions"><button class="button button-primary" type="submit">Save contact information</button></div></form>';
-    echo '<section class="surface notes-panel"><h2>Academic and personal record</h2><dl class="detail-grid">';
+    echo '<section id="profile-personal" class="surface notes-panel"><h2>Academic and personal record</h2><dl class="detail-grid">';
     foreach (['birthdate'=>'Date of birth','gender'=>'Gender','birthplace'=>'Place of birth','elemschool'=>'Elementary school','hsschool'=>'High school','lastgrad'=>'Previous school'] as $key=>$label) { echo '<div><dt>'.escape_html($label).'</dt><dd>'.escape_html($student[$key]?:'Not provided').'</dd></div>'; }
-    echo '</dl></section>';
+    echo '</dl></section></div></div>';
 }
 function render_settings()
 {

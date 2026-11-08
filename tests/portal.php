@@ -39,7 +39,7 @@ function save_fixture($module,$fields) {
 try {
     db('DELETE FROM auth_login_limits WHERE ip_key = ?',[$ip]);
     $admin_token=login_as('admin','admin',getenv('TEST_ADMIN_PASSWORD'));
-    foreach (['dashboard','students','courses','subjects','sections','schedules','users','enrollments','settings'] as $page) {
+    foreach (['dashboard','students','courses','subjects','sections','schedules','users','enrollments','reports','settings'] as $page) {
         [$code,$body]=request('admin','admin/index.php?page='.$page);
         verify($code===200 && strpos($body,'temporarily unavailable')===false,'Admin page '.$page);
         if (isset(portal_modules()[$page])) { [$code,$body]=request('admin','admin/index.php?page='.$page.'&new=1'); verify($code===200 && strpos($body,'temporarily unavailable')===false,'Form '.$page); }
@@ -72,6 +72,10 @@ try {
     }
     [$code]=request('student','admin/index.php'); verify($code===403,'Student cannot access administration');
     [$code]=request('student','student/index.php?page=users'); verify($code===404,'Student cannot access account management');
+    [$code]=request('student','student/index.php?page=reports'); verify($code===404,'Student has no reports navigation route');
+    [$code]=request('student','admin/export.php?report_type=students'); verify($code===403,'Student cannot export administrative reports');
+    [$code]=request('student','admin/report-print.php?report_type=students'); verify($code===403,'Student cannot open administrative print reports');
+    [$code]=request('anonymous','admin/export.php'); verify($code===303,'Anonymous CSV export requires login');
     $admin_id=row("SELECT id FROM auth_users WHERE username='admin'")['id'];
     [$code,$body]=request('admin','admin/index.php?page=users&edit='.$admin_id,['csrf_token'=>$admin_token,'action'=>'save','id'=>(string)$admin_id,'full_name'=>'University Administrator','username'=>'admin','role'=>'admin']);
     verify($code===200 && strpos($body,'cannot remove your own')!==false,'Administrator cannot disable own account');
@@ -103,6 +107,50 @@ try {
     $second=row("SELECT id FROM enrollment_requests WHERE student_id = ? AND semester='Second semester'",[$student_id]); $ids['enrollments'][]=$second['id'];
     [$code]=request('student','student/index.php?page=enrollments&view='.$second['id'],['csrf_token'=>$student_token,'action'=>'withdraw','id'=>(string)$second['id']]); verify($code===303,'Pending request withdrawal');
     [$code]=request('student','student/index.php?page=enroll',$payload); verify($code===303,'Withdrawn term can be resubmitted');
+    foreach (['enrollments','students','courses','subjects','sections','schedules'] as $report_type) {
+        $query=http_build_query(['report_type'=>$report_type,'course'=>$course]);
+        [$code,$body]=request('admin','admin/index.php?page=reports&'.$query);
+        verify($code===200 && strpos($body,'Download CSV')!==false && strpos($body,$course)!==false,'Report preview '.$report_type);
+        [$code,$body]=request('admin','admin/export.php?'.$query);
+        verify($code===200 && stripos($body,'Content-Type: text/csv; charset=UTF-8')!==false && stripos($body,'Content-Disposition: attachment;')!==false,'CSV download headers '.$report_type);
+        $csv=explode("\r\n\r\n",$body,2)[1];
+        verify(str_starts_with($csv,"\xEF\xBB\xBF") && strpos($csv,$course)!==false && strpos($csv,'password_hash')===false,'CSV data '.$report_type);
+        [$code,$body]=request('admin','admin/report-print.php?'.$query);
+        verify($code===200 && strpos($body,$course)!==false && strpos($body,'id="print-report"')!==false,'Printable report '.$report_type);
+    }
+    [$code,$body]=request('admin','admin/export.php?'.http_build_query(['report_type'=>'enrollments','course'=>$course,'status'=>'approved','semester'=>'First semester','academic_year'=>'2026-2027']));
+    $csv=explode("\r\n\r\n",$body,2)[1];
+    $csv_stream=fopen('php://memory','w+'); fwrite($csv_stream,substr($csv,3)); rewind($csv_stream); $csv_rows=[];
+    while (($csv_row=fgetcsv($csv_stream,0,',','"',''))!==false) { $csv_rows[]=$csv_row; } fclose($csv_stream);
+    verify($code===200 && count($csv_rows)===2 && $csv_rows[1][8]==='approved','Combined CSV filters match exactly one enrollment');
+    [$code,$body]=request('admin','admin/export.php?report_type=students&course=nonexistent_'.$prefix);
+    $csv=explode("\r\n\r\n",$body,2)[1]; verify($code===200 && substr_count(trim($csv),"\n")===0,'Empty export contains a header only');
+    foreach (['report_type=invalid','report_type[]=students','report_type=enrollments&status=invalid','report_type=enrollments&date_from=2026-02-30','report_type=enrollments&date_from=2026-12-01&date_to=2026-01-01'] as $bad_query) {
+        [$code]=request('admin','admin/export.php?'.$bad_query); verify($code===400,'Invalid export filters rejected');
+    }
+    [$code,$body]=request('admin','admin/export.php?'.http_build_query(['report_type'=>'students','course'=>"' OR 1=1 --"]));
+    verify($code===200 && strpos(explode("\r\n\r\n",$body,2)[1],$prefix)===false,'Report filter SQL injection rejected');
+    $original_name=row('SELECT fname FROM studenttbl WHERE ID = ?',[$student_id])['fname'];
+    db('UPDATE studenttbl SET fname = ? WHERE ID = ?',["=HYPERLINK(\"https://example.test\")",$student_id]);
+    [$code,$body]=request('admin','admin/export.php?'.http_build_query(['report_type'=>'students','course'=>$course]));
+    $csv=explode("\r\n\r\n",$body,2)[1];
+    verify($code===200 && strpos($csv,"'=HYPERLINK")!==false,'Spreadsheet formula injection neutralized');
+    db('UPDATE studenttbl SET fname = ? WHERE ID = ?',[$original_name,$student_id]);
+    $fixture=row('SELECT * FROM studenttbl WHERE ID = ?',[$student_id]); unset($fixture['ID']);
+    $extra_students=[];
+    for ($n=0;$n<21;$n++) {
+        $fixture['studnum']=$prefix.'_page_'.$n;
+        db('INSERT INTO studenttbl (`'.implode('`,`',array_keys($fixture)).'`) VALUES ('.implode(',',array_fill(0,count($fixture),'?')).')',array_values($fixture));
+        $extra_students[]=$conn->insert_id; $ids['students'][]=$conn->insert_id;
+    }
+    [$code,$body]=request('admin','admin/index.php?page=reports&'.http_build_query(['report_type'=>'students','course'=>$course,'p'=>2]));
+    verify($code===200 && strpos($body,'21–23 of 23')!==false,'Report preview paginates matching records');
+    [$code,$body]=request('admin','admin/export.php?'.http_build_query(['report_type'=>'students','course'=>$course,'p'=>2]));
+    $csv=explode("\r\n\r\n",$body,2)[1];
+    verify($code===200 && substr_count(trim($csv),"\n")===23,'CSV exports all matches beyond preview pagination');
+    [$code,$body]=request('admin','admin/report-print.php?'.http_build_query(['report_type'=>'students','course'=>$course,'p'=>2]));
+    verify($code===200 && strpos($body,'23 matching records')!==false,'Print report includes all matches');
+    foreach ($extra_students as $extra_id) { db('DELETE FROM studenttbl WHERE ID = ?',[$extra_id]); }
     [$code,$body]=request('admin','admin/index.php?page=courses',['csrf_token'=>$admin_token,'action'=>'delete','id'=>(string)$course_id]); verify($code===200 && strpos($body,'in use')!==false,'Referenced course deletion blocked');
     [$code]=request('student','student/index.php?page=settings',['csrf_token'=>$student_token,'action'=>'password','current_password'=>$student_password,'new_password'=>$student_password.'2','confirm_password'=>$student_password.'2']); verify($code===303,'Student password change');
     [$code]=request('student','logout.php',['csrf_token'=>$student_token]); verify($code===303,'Shared logout');

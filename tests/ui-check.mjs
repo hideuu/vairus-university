@@ -98,7 +98,16 @@ try {
     await viewport(1440);
     await login('admin', process.env.TEST_ADMIN_PASSWORD);
     await capture('admin-desktop');
+    await navigate('admin/index.php?page=reports'); await capture('reports-desktop');
+    await viewport(390,844); await capture('reports-mobile');
+    await viewport(1440);
+    await navigate('admin/report-print.php?report_type=enrollments');
+    await send('Emulation.setEmulatedMedia',{media:'print'});
+    assert.equal(await evaluate("getComputedStyle(document.querySelector('.report-print-actions')).display"),'none','Print report hides action controls');
+    await capture('reports-print');
+    await send('Emulation.setEmulatedMedia',{media:''});
     await navigate('admin/index.php?page=students'); await capture('students-desktop');
+    await navigate('admin/index.php?page=subjects'); await capture('subjects-catalog-desktop');
     assert.equal(await evaluate("[...document.querySelectorAll('.table-scroll')].every(r=>r.scrollWidth<=r.clientWidth+1 ? !r.hasAttribute('tabindex') : r.tabIndex===0)"),true,'Only overflowing tables add tab stops');
     await navigate('admin/index.php?page=courses');
     assert.equal(await evaluate("!!document.querySelector('.cell-details')"),true,'Long course text can expand');
@@ -138,6 +147,7 @@ try {
     await login(process.env.UI_STUDENT_USERNAME, process.env.UI_STUDENT_PASSWORD);
     await capture('student-mobile');
     await navigate('student/index.php?page=enroll'); await capture('enroll-mobile');
+    assert.ok(await evaluate("!!document.querySelector('.subject-selection-grid .subject-card')"),'Subject choices render as accessible reference-led cards');
     assert.equal(await evaluate("[...document.querySelectorAll('.table-scroll')].every(r=>r.scrollWidth<=r.clientWidth+1 || (r.tabIndex===0 && !document.getElementById(r.getAttribute('aria-describedby')).hidden))"),true,'Overflowing tables show scroll guidance');
     assert.ok(await evaluate("document.querySelector('.subject-choice').getBoundingClientRect().height>=44"),'Subject selection has a touch target');
     await evaluate("document.querySelector('.subject-checkbox').click()");
@@ -146,6 +156,7 @@ try {
     await viewport(320,740); await capture('enroll-small-mobile');
     await viewport(1440);
     await navigate('student/index.php'); await capture('student-desktop');
+    await navigate('student/index.php?page=profile'); await capture('profile-desktop');
     await navigate('student/index.php?page=enroll'); await capture('enroll-desktop');
     await navigate('student/index.php?page=enrollments'); await capture('requests-desktop');
     const detailLink = await evaluate("document.querySelector('td a[href*=view]').getAttribute('href')");

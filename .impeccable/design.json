@@ -1,16 +1,123 @@
 {
-  "colors": {"navy":"#1E2A5A","blue":"#3A5BD9","paleBlue":"#E4EAFD","offWhite":"#F5F7FF","gold":"#F5B942","secondary":"#536087","inputBorder":"#7C8AB0"},
-  "typography": {"heading":"Plus Jakarta Sans","body":"Inter"},
-  "layout": {"desktopColumns":"54% 46%","mediumColumns":"46% 54%","mediumBreakpoint":"900px","formMaxWidth":"390px","wideFormMaxWidth":"430px","wideBreakpoint":"1600px","mobileBreakpoint":"640px"},
-  "controls": {"minHeight":"54px","borderRadius":"7px"},
-  "portal": {
-    "mode": "Operate",
-    "layout": {"sidebarWidth":"244px","mediumSidebarWidth":"220px","mediumBreakpoint":"1200px","drawerBreakpoint":"900px","drawerWidth":"260px","mobileBreakpoint":"600px","contentMaxWidth":"1600px","contentPadding":"34px 38px 48px","mobileContentPadding":"24px 16px 32px","topbarMinHeight":"82px","mobileTopbarHeight":"74px"},
-    "typography": {"bodySize":"14px","headingSize":"28px","headingLineHeight":1.3,"headingWeight":700,"mobileHeadingSize":"24px","sectionHeadingSize":"17px","sectionHeadingLineHeight":1.4,"sectionHeadingWeight":650,"labelSize":"14px","tableSize":"14px","tableHeadingSize":"12px","mobileInputSize":"16px","countNumerals":"tabular-nums"},
-    "surfaces": {"background":"#F5F7FF","surface":"#FFFFFF","border":"1px solid #E4EAFD","radius":"10px","statRadius":"9px","bannerRadius":"12px","drawerShadow":"8px 12px 28px rgba(30,42,90,.15)"},
-    "controls": {"minHeight":"44px","radius":"7px","primaryBackground":"#3A5BD9","primaryHover":"#1E2A5A","secondaryBackground":"#FFFFFF","secondaryBorder":"#7C8AB0","secondaryHover":"#E4EAFD","bannerActionBackground":"#F5B942","bannerActionText":"#1E2A5A","dangerBackground":"#A72E42","dangerHover":"#7C2131","focusOutline":"2px solid #3A5BD9","focusOffset":"2px"},
-    "navigation": {"background":"#1E2A5A","text":"#D5DDFA","hover":"#2B3B75","active":"#3A5BD9","focus":"#F5B942","itemMinHeight":"46px","itemRadius":"7px"},
-    "badges": {"minHeight":"26px","radius":"5px","fontSize":"11px","pending":{"background":"#FFF0CE","text":"#74500A"},"approvedActive":{"background":"#E4EAFD","text":"#2547B5"},"rejectedDisabled":{"background":"#FFF1F3","text":"#92293E"},"withdrawn":{"background":"#F5F7FF","text":"#536087"}},
-    "patterns": {"tables":"Horizontal overflow with search, counts, pagination, and actionable empty states.","studentOptionalGroups":["Personal details","Family and guardian","Previous education"],"optionalGroupBehavior":"Expandable; opens automatically when containing values.","studentIdentity":"Explicit account-to-student link and own-record views; missing link displays administrator-contact guidance.","print":"Hide workspace chrome and actions; white paper, no workspace offset, visible table overflow, university heading."}
-  }
+    "colors":  {
+                   "navy":  "#1E2A5A",
+                   "blue":  "#3A5BD9",
+                   "paleBlue":  "#E4EAFD",
+                   "offWhite":  "#F5F7FF",
+                   "gold":  "#F5B942",
+                   "secondary":  "#536087",
+                   "inputBorder":  "#7C8AB0"
+               },
+    "typography":  {
+                       "heading":  "Plus Jakarta Sans",
+                       "body":  "Inter"
+                   },
+    "layout":  {
+                   "desktopColumns":  "intro + sign-in panel over campus photograph",
+                   "mediumColumns":  "46% 54%",
+                   "mediumBreakpoint":  "900px",
+                   "formMaxWidth":  "390px",
+                   "wideFormMaxWidth":  "430px",
+                   "wideBreakpoint":  "1600px",
+                   "mobileBreakpoint":  "760px"
+               },
+    "controls":  {
+                     "minHeight":  "54px",
+                     "borderRadius":  "7px"
+                 },
+    "portal":  {
+                   "mode":  "Operate",
+                   "layout":  {
+                                  "navigation":  "horizontal header with More disclosure",
+                                  "drawerBreakpoint":  "900px",
+                                  "drawerWidth":  "280px",
+                                  "mobileBreakpoint":  "600px",
+                                  "contentMaxWidth":  "1320px",
+                                  "contentPadding":  "42px 32px 48px",
+                                  "mobileContentPadding":  "24px 16px 32px",
+                                  "topbarMinHeight":  "88px",
+                                  "mobileTopbarHeight":  "74px",
+                                  "studentMobileNavigation":  "four fixed bottom links"
+                              },
+                   "typography":  {
+                                      "bodySize":  "14px",
+                                      "headingSize":  "34px",
+                                      "headingLineHeight":  1.3,
+                                      "headingWeight":  700,
+                                      "mobileHeadingSize":  "28px",
+                                      "sectionHeadingSize":  "17px",
+                                      "sectionHeadingLineHeight":  1.4,
+                                      "sectionHeadingWeight":  650,
+                                      "labelSize":  "14px",
+                                      "tableSize":  "14px",
+                                      "tableHeadingSize":  "12px",
+                                      "mobileInputSize":  "16px",
+                                      "countNumerals":  "tabular-nums"
+                                  },
+                   "surfaces":  {
+                                    "background":  "#F5F7FF",
+                                    "surface":  "#FFFFFF",
+                                    "border":  "1px solid #E4EAFD",
+                                    "radius":  "18px",
+                                    "statRadius":  "9px",
+                                    "bannerRadius":  "12px",
+                                    "drawerShadow":  "8px 12px 28px rgba(30,42,90,.15)"
+                                },
+                   "controls":  {
+                                    "minHeight":  "44px",
+                                    "radius":  "11px",
+                                    "primaryBackground":  "#3A5BD9",
+                                    "primaryHover":  "#1E2A5A",
+                                    "secondaryBackground":  "#FFFFFF",
+                                    "secondaryBorder":  "#7C8AB0",
+                                    "secondaryHover":  "#E4EAFD",
+                                    "bannerActionBackground":  "#F5B942",
+                                    "bannerActionText":  "#1E2A5A",
+                                    "dangerBackground":  "#A72E42",
+                                    "dangerHover":  "#7C2131",
+                                    "focusOutline":  "2px solid #3A5BD9",
+                                    "focusOffset":  "2px"
+                                },
+                   "navigation":  {
+                                      "background":  "#1E2A5A",
+                                      "text":  "#D5DDFA",
+                                      "hover":  "#2B3B75",
+                                      "active":  "gold underline for administrators; pale blue for students",
+                                      "focus":  "#F5B942",
+                                      "itemMinHeight":  "46px",
+                                      "itemRadius":  "7px"
+                                  },
+                   "badges":  {
+                                  "minHeight":  "26px",
+                                  "radius":  "5px",
+                                  "fontSize":  "11px",
+                                  "pending":  {
+                                                  "background":  "#FFF0CE",
+                                                  "text":  "#74500A"
+                                              },
+                                  "approvedActive":  {
+                                                         "background":  "#E4EAFD",
+                                                         "text":  "#2547B5"
+                                                     },
+                                  "rejectedDisabled":  {
+                                                           "background":  "#FFF1F3",
+                                                           "text":  "#92293E"
+                                                       },
+                                  "withdrawn":  {
+                                                    "background":  "#F5F7FF",
+                                                    "text":  "#536087"
+                                                }
+                              },
+                   "patterns":  {
+                                    "tables":  "Horizontal overflow with search, counts, pagination, and actionable empty states.",
+                                    "studentOptionalGroups":  [
+                                                                  "Personal details",
+                                                                  "Family and guardian",
+                                                                  "Previous education"
+                                                              ],
+                                    "optionalGroupBehavior":  "Expandable; opens automatically when containing values.",
+                                    "studentIdentity":  "Explicit account-to-student link and own-record views; missing link displays administrator-contact guidance.",
+                                    "print":  "Hide workspace chrome and actions; white paper, no workspace offset, visible table overflow, university heading."
+                                }
+               }
 }

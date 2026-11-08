@@ -19,6 +19,8 @@ function setMenu(open) {
 }
 function updateNavigation() {
     toggle.hidden = !mobile.matches;
+    const more = sidebar.querySelector('.nav-more');
+    if (more) more.open = mobile.matches;
     setMenu(false);
 }
 toggle.addEventListener('click', () => setMenu(toggle.getAttribute('aria-expanded') !== 'true'));
@@ -30,9 +32,17 @@ document.addEventListener('keydown', (event) => {
         setMenu(false);
         toggle.focus();
     }
+    if (event.key === 'Escape' && !mobile.matches) {
+        const more = sidebar.querySelector('.nav-more[open]');
+        if (more) { more.open = false; more.querySelector('summary').focus(); }
+    }
 });
 document.addEventListener('click', (event) => {
     if (mobile.matches && !sidebar.contains(event.target) && !toggle.contains(event.target)) setMenu(false);
+    if (!mobile.matches) {
+        const more = sidebar.querySelector('.nav-more');
+        if (more && !more.contains(event.target)) more.open = false;
+    }
 });
 document.addEventListener('focusin', (event) => {
     if (mobile.matches && toggle.getAttribute('aria-expanded') === 'true'

@@ -1,0 +1,43 @@
+/* Full-campus composition inspired by the supplied login reference. */
+.login-section { position:relative; isolation:isolate; grid-template-columns:minmax(0,1fr) minmax(380px,460px); align-items:center; gap:70px; padding:40px max(40px,calc((100vw - 1280px)/2)); background:var(--navy) url('./assets/img/university_bg.jpg') center/cover no-repeat; }
+.login-section::before { content:''; position:absolute; inset:0; z-index:-1; background:linear-gradient(90deg,rgba(30,42,90,.94),rgba(30,42,90,.65)); }
+.university-intro { position:static; background:transparent; padding:0; overflow:visible; min-height:650px; justify-content:flex-start; }
+.university-intro .campus-image,.university-intro .intro-shade { display:none; }
+.university-brand { font-size:20px; }
+.intro-copy { margin:100px 0 32px; }
+.intro-copy h1 { font-size:clamp(40px,4vw,62px); max-width:17ch; }
+.intro-copy p { font-size:16px; }
+.gold-rule { width:42px; }
+.login-steps { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; list-style:none; padding:0; margin:0 0 50px; }
+.login-steps li { padding:18px; border:1px solid rgba(228,234,253,.3); border-radius:14px; background:rgba(30,42,90,.45); }
+.login-steps strong { display:block; color:var(--gold); font-size:14px; }
+.login-steps span { display:block; font-size:12px; line-height:1.6; margin-top:8px; }
+.intro-footer { margin-top:auto; }
+.login-panel { min-height:580px; padding:34px; border-radius:24px; background:white; box-shadow:0 20px 60px rgba(30,42,90,.22); }
+.login-container { padding:36px 0 42px; max-width:none; }
+.login-container h2 { font-size:32px; }
+.login-panel input { background:white; border-radius:11px; }
+.login-button { border-radius:11px; }
+.panel-footer { border-top:1px solid var(--pale-blue); padding-top:18px; }
+@media(max-width:1100px) {
+ .login-section { gap:36px; padding:32px; grid-template-columns:minmax(0,1fr) minmax(340px,400px); }
+ .login-steps { grid-template-columns:1fr; gap:8px; }
+ .login-steps li { padding:12px 16px; }
+ .login-steps span { margin-top:3px; }
+ .intro-copy { margin-top:65px; }
+}
+@media(max-width:760px) {
+ .login-section { grid-template-columns:1fr; gap:28px; padding:28px 20px; }
+ .university-intro { min-height:0; width:100%; }
+ .university-brand { font-size:17px; }
+ .intro-copy { margin:30px 0 0; }
+ .intro-copy h1 { font-size:34px; max-width:none; }
+ .intro-copy h1 br { display:none; }
+ .intro-copy p,.gold-rule,.login-steps,.intro-footer { display:none; }
+ .login-panel { width:100%; max-width:460px; justify-self:center; min-height:0; padding:28px; border-radius:20px; }
+ .login-container { padding:26px 0 30px; }
+ .login-container h2 { font-size:28px; }
+ .login-panel .panel-top { justify-content:flex-start; }
+ .university-intro .intro-copy { display:block; }
+}
+@media(max-width:360px) { .login-section { padding:24px 16px; }.login-panel { padding:24px; }.intro-copy h1 { font-size:28px; } }

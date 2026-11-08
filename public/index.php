@@ -7,6 +7,7 @@
 <meta name="theme-color" content="#1E2A5A">
 <title>Log in | Vairus University</title>
 <link href="styles.css" rel="stylesheet">
+<link href="login-layout.css" rel="stylesheet">
 <script src="form.js" defer></script>
 <script src="login.js" defer></script>
 </head>
@@ -16,7 +17,8 @@
 <img class="campus-image" src="assets/img/university_bg.jpg" alt="University building overlooking a landscaped courtyard">
 <div class="intro-shade"></div>
 <div class="university-brand"><span class="brand-mark" aria-hidden="true">V<span></span></span><span>Vairus<br>University</span></div>
-<div class="intro-copy"><span class="gold-rule" aria-hidden="true"></span><h1>Your next chapter<br>starts here.</h1><p>A place to learn, grow, and move forward.<br>Welcome to your university community.</p></div>
+<div class="intro-copy"><span class="gold-rule" aria-hidden="true"></span><h1>Your next chapter <br>starts here.</h1><p>A place to learn, grow, and move forward.<br>Welcome to your university community.</p></div>
+<ol class="login-steps"><li><strong>Log in</strong><span>Use your university account.</span></li><li><strong>Choose subjects</strong><span>Plan your next semester.</span></li><li><strong>Submit for review</strong><span>Track your enrollment online.</span></li></ol>
 <p class="intro-footer">Vairus University &middot; Online enrollment</p>
 </section>
 <section class="login-panel" aria-labelledby="login-heading">
